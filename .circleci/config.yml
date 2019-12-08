@@ -1,13 +1,27 @@
 version: 2.1
 
 jobs:
-  build:
+  Installation:
     docker:
-    - image: circleci/node:10.16-browsers
+      - image: circleci/node:10.16-browsers
     working_directory: ~/mapbox-gl-js
     steps:
       - checkout
       - run: yarn
+      - persist_to_workspace:
+          # Must be an absolute path, or relative path from working_directory. This is a directory on the container which is 
+          # taken to be the root directory of the workspace.
+          root: ~/mapbox-gl-js
+          # Must be relative path from root
+          paths:
+            - ./
+  Build et Tests:
+    docker:
+      - image: circleci/node:10.16-browsers
+    working_directory: ~/mapbox-gl-js
+    steps:
+      - attach_workspace:
+          at: .
       - run: yarn run lint
       - run: yarn run lint-docs
       - run: yarn run lint-css
@@ -42,3 +56,12 @@ jobs:
       - run:
           name: Build
           command: BENCHMARK_VERSION="${CIRCLE_TAG:-$CIRCLE_BRANCH} $(git rev-parse --short=7 HEAD)" yarn run build-benchmarks
+
+workflows:
+  version: 2
+  Our Awesome Workflow:
+    jobs:
+      - Installation
+      - Build et Tests:
+          requires:
+            - Installation
