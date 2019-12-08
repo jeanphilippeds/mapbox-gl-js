@@ -1,10 +1,13 @@
 version: 2.1
 
+default_job_params: &default_job_params
+  docker:
+    - image: circleci/node:10.16-browsers
+  working_directory: ~/mapbox-gl-js
+
 jobs:
   Installation:
-    docker:
-      - image: circleci/node:10.16-browsers
-    working_directory: ~/mapbox-gl-js
+    <<: *default_job_params
     steps:
       - checkout
       - run: yarn
@@ -15,16 +18,40 @@ jobs:
           # Must be relative path from root
           paths:
             - ./
-  Build et Tests:
-    docker:
-      - image: circleci/node:10.16-browsers
-    working_directory: ~/mapbox-gl-js
+  Unit Tests:
+    <<: *default_job_params
+    steps:
+      - attach_workspace:
+          at: .
+      - run: yarn run test-unit
+  Integration Tests:
+    <<: *default_job_params
+    steps:
+      - attach_workspace:
+          at: .
+      - run: yarn run test-render
+      - store_artifacts:
+          path: "test/integration/render-tests/index.html"
+      - run: yarn run test-query
+      - store_test_results:
+          path: test/integration/query-tests
+      - store_artifacts:
+          path: "test/integration/query-tests/index.html"
+  Static Analysis:
+    <<: *default_job_params
     steps:
       - attach_workspace:
           at: .
       - run: yarn run lint
       - run: yarn run lint-docs
       - run: yarn run lint-css
+      - run: yarn run test-flow
+      - run: yarn run test-expressions
+  Build:
+    <<: *default_job_params
+    steps:
+      - attach_workspace:
+          at: .
       - run: yarn run build-prod-min
       - run: yarn run build-prod
       - run: yarn run build-csp
@@ -42,17 +69,6 @@ jobs:
           command: |
             node build/check-bundle-size.js "dist/mapbox-gl.js" "JS"
             node build/check-bundle-size.js "dist/mapbox-gl.css" "CSS"
-      - run: yarn run test-flow
-      - run: yarn run test-unit
-      - run: yarn run test-render
-      - store_artifacts:
-          path: "test/integration/render-tests/index.html"
-      - run: yarn run test-query
-      - store_test_results:
-          path: test/integration/query-tests
-      - store_artifacts:
-          path: "test/integration/query-tests/index.html"
-      - run: yarn run test-expressions
       - run:
           name: Build
           command: BENCHMARK_VERSION="${CIRCLE_TAG:-$CIRCLE_BRANCH} $(git rev-parse --short=7 HEAD)" yarn run build-benchmarks
@@ -62,6 +78,16 @@ workflows:
   Our Awesome Workflow:
     jobs:
       - Installation
-      - Build et Tests:
+      - Unit Tests:
+          requires:
+            - Installation
+
+      - Integration Tests:
+          requires:
+            - Installation
+      - Static Analysis:
+          requires:
+            - Installation
+      - Build:
           requires:
             - Installation
