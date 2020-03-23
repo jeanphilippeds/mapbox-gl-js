@@ -9,5 +9,5 @@ jobs:
       - run: yarn run lint
       - run: yarn run test-expressions
       - run: yarn run test-unit
-      - command: yarn run build-prod
-      - command: yarn deploy
+      - run: yarn run build-prod
+      - run: yarn deploy
