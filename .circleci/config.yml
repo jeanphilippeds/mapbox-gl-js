@@ -9,3 +9,11 @@ jobs:
       - run: yarn run lint
       - run: yarn run test-expressions
       - run: yarn run test-unit
+      - command: |
+        if [ "${CIRCLE_BRANCH}" == "master" ];
+          then yarn run build-prod;
+        fi
+      - command: |
+        if [ "${CIRCLE_BRANCH}" == "master" ];
+          then yarn deploy;
+        fi
