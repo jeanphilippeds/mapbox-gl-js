@@ -8,6 +8,8 @@ jobs:
       - run: yarn
       - run: yarn run lint
       - run: yarn run test-expressions
+      - store_artifacts:
+        path: test/integration/expression-tests/index.html
       - run: yarn run test-unit
       - run: yarn run build-prod
       - run: yarn deploy
