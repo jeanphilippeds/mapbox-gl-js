@@ -5,6 +5,7 @@ jobs:
       - image: circleci/node:10.16-browsers # the primary container, where your job's commands are run
     steps:
       - checkout # check out the code in the project directory
+      - run: yarn
       - run: yarn run lint
       - run: yarn run test-expressions
       - run: yarn run test-unit
