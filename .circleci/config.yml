@@ -8,6 +8,15 @@ workflows:
       - build:
           requires:
             - installation
+      - unit:
+          requires:
+            - installation
+      - integration:
+          requires:
+            - installation
+      - static:
+          requires:
+            - installation
             
 jobs:
   installation:
@@ -28,9 +37,6 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run: yarn run lint
-      - run: yarn run lint-docs
-      - run: yarn run lint-css
       - run: yarn run build-prod-min
       - run: yarn run build-prod
       - run: yarn run build-csp
@@ -48,8 +54,24 @@ jobs:
           command: |
             node build/check-bundle-size.js "dist/mapbox-gl.js" "JS"
             node build/check-bundle-size.js "dist/mapbox-gl.css" "CSS"
-      - run: yarn run test-flow
+      - run:
+          name: Build
+          command: BENCHMARK_VERSION="${CIRCLE_TAG:-$CIRCLE_BRANCH} $(git rev-parse --short=7 HEAD)" yarn run build-benchmarks
+  unit:
+    docker:
+    - image: circleci/node:10.16-browsers
+    working_directory: ~/mapbox-gl-js
+    steps:
+      - attach_workspace:
+          at: .
       - run: yarn run test-unit
+  integration:
+    docker:
+    - image: circleci/node:10.16-browsers
+    working_directory: ~/mapbox-gl-js
+    steps:
+      - attach_workspace:
+          at: .
       - run: yarn run test-render
       - store_artifacts:
           path: "test/integration/render-tests/index.html"
@@ -58,7 +80,15 @@ jobs:
           path: test/integration/query-tests
       - store_artifacts:
           path: "test/integration/query-tests/index.html"
+  static:
+    docker:
+    - image: circleci/node:10.16-browsers
+    working_directory: ~/mapbox-gl-js
+    steps:
+      - attach_workspace:
+          at: .
+      - run: yarn run lint
+      - run: yarn run lint-docs
+      - run: yarn run lint-css
+      - run: yarn run test-flow
       - run: yarn run test-expressions
-      - run:
-          name: Build
-          command: BENCHMARK_VERSION="${CIRCLE_TAG:-$CIRCLE_BRANCH} $(git rev-parse --short=7 HEAD)" yarn run build-benchmarks
