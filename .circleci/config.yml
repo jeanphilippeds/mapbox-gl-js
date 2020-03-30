@@ -8,11 +8,17 @@ jobs:
     steps:
       - checkout
       - run: yarn
+      - persist_to_workspace:
+          root: ~/mapbox-gs-gl
+          paths:
+            - ./
   build:
     docker:
     - image: circleci/node:10.16-browsers
     working_directory: ~/mapbox-gl-js
     steps:
+      - attach_workspace:
+          at: .
       - run: yarn run lint
       - run: yarn run lint-docs
       - run: yarn run lint-css
