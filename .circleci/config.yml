@@ -1,13 +1,18 @@
 version: 2.1
 
 jobs:
-  build:
+  installation:
     docker:
     - image: circleci/node:10.16-browsers
     working_directory: ~/mapbox-gl-js
     steps:
       - checkout
       - run: yarn
+  build:
+    docker:
+    - image: circleci/node:10.16-browsers
+    working_directory: ~/mapbox-gl-js
+    steps:
       - run: yarn run lint
       - run: yarn run lint-docs
       - run: yarn run lint-css
