@@ -18,7 +18,7 @@ jobs:
       - checkout
       - run: yarn
       - persist_to_workspace:
-          root: ~/mapbox-gs-gl
+          root: ~/mapbox-gl-js
           paths:
             - ./
   build:
